@@ -20,217 +20,154 @@
 &lt;head&gt;
   &lt;meta charset=&quot;UTF-8&quot; /&gt;
   &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
-  &lt;title&gt;<span lang="hi-IN">تجربة متقدمة جداً لتشغيل وتسجيل الكاميرا والمايكروفون</span>&lt;/title&gt;
+  &lt;title&gt;<span lang="hi-IN">بث صوتي مباشر قوي وثابت</span>&lt;/title&gt;
   &lt;style&gt;
     body {
       font-family: &quot;Segoe UI&quot;, Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #eee;
-      margin: 0;
-      padding: 20px;
-      direction: rtl;
+      background: #0f2027;
+      background: linear-gradient(to right, #203a43, #2c5364);
+      color: #fff;
       text-align: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
     h1 {
-      margin-bottom: 10px;
-    }
-    video {
-      margin-top: 20px;
-      border: 3px solid #4caf50;
-      border-radius: 10px;
-      width: 720px;
-      height: 540px;
-      background: black;
-      box-shadow: 0 0 15px #4caf50;
-    }
-    #controls {
-      margin-top: 20px;
+      margin-bottom: 40px;
+      font-weight: 700;
+      font-size: 2.5em;
     }
     button {
-      background-color: #4caf50;
+      background-color: #1db954;
       border: none;
-      padding: 15px 30px;
-      font-size: 18px;
-      margin: 5px;
-      cursor: pointer;
-      border-radius: 8px;
       color: white;
-      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.6);
+      padding: 16px 40px;
+      font-size: 1.2em;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 0 12px;
       transition: background-color 0.3s ease;
-    }
-    button:hover:not(:disabled) {
-      background-color: #43a047;
+      box-shadow: 0 4px 10px rgba(29, 185, 84, 0.5);
+      user-select: none;
     }
     button:disabled {
-      background-color: #2e7d32;
+      background-color: #555;
       cursor: not-allowed;
       box-shadow: none;
     }
+    button:hover:not(:disabled) {
+      background-color: #1ed760;
+    }
     #status {
-      margin-top: 15px;
-      font-weight: bold;
-      font-size: 18px;
-    }
-    #audioLevel {
-      width: 720px;
-      height: 30px;
-      background-color: #222;
-      margin: 20px auto 0 auto;
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: inset 0 0 5px #4caf50;
-    }
-    #audioLevelFill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #76ff03, #c6ff00);
-      transition: width 0.1s ease;
-    }
-    #downloadLink {
-      display: inline-block;
       margin-top: 20px;
-      font-size: 18px;
-      color: #76ff03;
-      text-decoration: none;
-      border: 2px solid #76ff03;
-      padding: 10px 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #76ff03;
-      transition: background-color 0.3s ease, color 0.3s ease;
+      font-size: 1em;
+      color: #bbb;
+      min-height: 24px;
     }
-    #downloadLink:hover {
-      background-color: #76ff03;
-      color: #121212;
+    audio {
+      margin-top: 30px;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 10px;
+      outline: none;
+      background: #222;
+      box-shadow: 0 0 15px rgba(29, 185, 84, 0.5);
     }
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
-
-  &lt;h1&gt;<span lang="hi-IN">تجربة متقدمة جداً لتشغيل وتسجيل الكاميرا والمايكروفون</span>&lt;/h1&gt;
-
-  &lt;video id=&quot;video&quot; autoplay playsinline muted&gt;&lt;/video&gt;
-
-  &lt;div id=&quot;audioLevel&quot; title=&quot;<span lang="hi-IN">مستوى الصوت</span>&quot;&gt;
-    &lt;div id=&quot;audioLevelFill&quot;&gt;&lt;/div&gt;
+  &lt;h1&gt;<span lang="hi-IN">بث صوتي مباشر ثابت وقوي</span>&lt;/h1&gt;
+  &lt;div&gt;
+    &lt;button id=&quot;startBtn&quot;&gt;<span lang="hi-IN">ابدأ البث</span>&lt;/button&gt;
+    &lt;button id=&quot;stopBtn&quot; disabled&gt;<span lang="hi-IN">أوقف البث</span>&lt;/button&gt;
   &lt;/div&gt;
-
-  &lt;div id=&quot;controls&quot;&gt;
-    &lt;button id=&quot;startBtn&quot;&gt;<span lang="hi-IN">شغّل الكاميرا والمايكروفون</span>&lt;/button&gt;
-    &lt;button id=&quot;recordBtn&quot; disabled&gt;<span lang="hi-IN">بدء التسجيل</span>&lt;/button&gt;
-    &lt;button id=&quot;stopBtn&quot; disabled&gt;<span lang="hi-IN">إيقاف التسجيل</span>&lt;/button&gt;
-  &lt;/div&gt;
-
-  &lt;div id=&quot;status&quot;&gt;&lt;/div&gt;
-
-  &lt;a id=&quot;downloadLink&quot; style=&quot;display:none&quot; href=&quot;#&quot; download=&quot;recording.webm&quot;&gt;<span lang="hi-IN">تحميل التسجيل</span>&lt;/a&gt;
+  &lt;div id=&quot;status&quot;&gt;<span lang="hi-IN">الحالة</span>: <span lang="hi-IN">متوقف</span>&lt;/div&gt;
+  &lt;audio id=&quot;audio&quot; controls autoplay&gt;&lt;/audio&gt;
 
   &lt;script&gt;
-    const startBtn = document.getElementById('startBtn');
-    const recordBtn = document.getElementById('recordBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const video = document.getElementById('video');
-    const status = document.getElementById('status');
-    const audioLevelFill = document.getElementById('audioLevelFill');
-    const downloadLink = document.getElementById('downloadLink');
+    (function() {
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const audioElem = document.getElementById('audio');
+      const statusElem = document.getElementById('status');
 
-    let mediaStream = null;
-    let mediaRecorder = null;
-    let recordedChunks = [];
+      let audioContext = null;
+      let mediaStream = null;
+      let sourceNode = null;
 
-    let audioContext = null;
-    let analyser = null;
-    let microphone = null;
-    let dataArray = null;
-
-    function updateAudioLevel() {
-      if (!analyser) return;
-      analyser.getByteFrequencyData(dataArray);
-      let values = 0;
-      for (let i = 0; i &lt; dataArray.length; i++) {
-        values += dataArray[i];
+      function updateStatus(message, isError = false) {
+        statusElem.textContent = '<span lang="hi-IN">الحالة</span>: ' + message;
+        statusElem.style.color = isError ? '#ff5555' : '#bbb';
       }
-      let average = values / dataArray.length;
-      let percent = Math.min(100, (average / 128) * 100);
-      audioLevelFill.style.width = percent + '%';
-      requestAnimationFrame(updateAudioLevel);
-    }
 
-    startBtn.addEventListener('click', async () =&gt; {
-      status.style.color = '#eee';
-      status.textContent = '<span lang="hi-IN">جاري طلب الأذونات</span>...';
-
-      try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 1280, height: 720, frameRate: { ideal: 30, max: 60 } },
-          audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 }
-        });
-
-        video.srcObject = mediaStream;
-        status.textContent = '<span lang="hi-IN">تم تفعيل الكاميرا والمايكروفون بنجاح</span>.';
-
-        recordBtn.disabled = false;
-        startBtn.disabled = true;
-
-        // <span lang="hi-IN">إعداد تحليل الصوت</span>
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        microphone = audioContext.createMediaStreamSource(mediaStream);
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        dataArray = new Uint8Array(bufferLength);
-        microphone.connect(analyser);
-
-        updateAudioLevel();
-
-      } catch (error) {
-        status.style.color = 'red';
-        status.textContent = `<span lang="hi-IN">حدث خطأ أو تم رفض الأذونات</span>: ${error.message}`;
-      }
-    });
-
-    recordBtn.addEventListener('click', () =&gt; {
-      if (!mediaStream) return;
-
-      recordedChunks = [];
-      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm; codecs=vp9,opus' });
-
-      mediaRecorder.ondataavailable = event =&gt; {
-        if (event.data.size &gt; 0) {
-          recordedChunks.push(event.data);
+      async function startStreaming() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          updateStatus('<span lang="hi-IN">المتصفح لا يدعم الوصول للمايكروفون</span>.', true);
+          alert('<span lang="hi-IN">متصفحك لا يدعم ميزة استخدام المايكروفون</span>.');
+          return;
         }
-      };
 
-      mediaRecorder.onstart = () =&gt; {
-        status.style.color = '#76ff03';
-        status.textContent = '<span lang="hi-IN">تم بدء التسجيل</span>...';
-        recordBtn.disabled = true;
-        stopBtn.disabled = false;
-        downloadLink.style.display = 'none';
-      };
+        try {
+          updateStatus('<span lang="hi-IN">يتم طلب إذن المايكروفون</span>...');
+          mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-      mediaRecorder.onstop = () =&gt; {
-        status.style.color = '#eee';
-        status.textContent = '<span lang="hi-IN">تم إيقاف التسجيل</span>. <span lang="hi-IN">يمكنك الآن تحميل الملف</span>.';
-        recordBtn.disabled = false;
-        stopBtn.disabled = true;
+          sourceNode = audioContext.createMediaStreamSource(mediaStream);
 
-        const blob = new Blob(recordedChunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        downloadLink.href = url;
-        downloadLink.style.display = 'inline-block';
-      };
+          // <span lang="hi-IN">يمكنك إضافة معالجة صوتية هنا مثل فلتر أو تحسين صوتي</span>
 
-      mediaRecorder.start();
-    });
+          sourceNode.connect(audioContext.destination);
+          audioElem.srcObject = mediaStream;
 
-    stopBtn.addEventListener('click', () =&gt; {
-      if (mediaRecorder &amp;&amp; mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+
+          updateStatus('<span lang="hi-IN">البث شغال الآن</span>');
+        } catch (error) {
+          updateStatus('<span lang="hi-IN">خطأ في الوصول للمايكروفون</span>: ' + error.message, true);
+          alert('<span lang="hi-IN">تعذر الوصول إلى المايكروفون</span>: ' + error.message);
+        }
       }
-    });
 
+      function stopStreaming() {
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(track =&gt; track.stop());
+          mediaStream = null;
+        }
+        if (sourceNode) {
+          sourceNode.disconnect();
+          sourceNode = null;
+        }
+        if (audioContext) {
+          audioContext.close();
+          audioContext = null;
+        }
+
+        audioElem.srcObject = null;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        updateStatus('<span lang="hi-IN">متوقف</span>');
+      }
+
+      startBtn.addEventListener('click', () =&gt; {
+        startStreaming();
+      });
+
+      stopBtn.addEventListener('click', () =&gt; {
+        stopStreaming();
+      });
+
+      // <span lang="hi-IN">لتحسين التوافق مع </span>iOS Safari:  
+      document.body.addEventListener('touchstart', () =&gt; {
+        if (audioContext &amp;&amp; audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+      }, { once: true });
+    })();
   &lt;/script&gt;
-
 &lt;/body&gt;
 &lt;/html&gt;</pre>
 </body>
