@@ -1,174 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-	<title></title>
-	<meta name="generator" content="LibreOffice 25.2.3.2 (Linux)"/>
-	<meta name="created" content="00:00:00"/>
-	<meta name="changed" content="00:00:00"/>
-	<style type="text/css">
-		@page { size: 8.5in 11in; margin: 0.79in }
-		p { margin-bottom: 0.1in; line-height: 115%; background: transparent }
-		pre { background: transparent }
-		pre.western { font-family: "Liberation Mono", monospace; font-size: 10pt }
-		pre.cjk { font-family: "Noto Sans Mono CJK SC", monospace; font-size: 10pt }
-		pre.ctl { font-family: "Liberation Mono", monospace; font-size: 10pt }
-	</style>
-</head>
-<body lang="en-US" link="#000080" vlink="#800000" dir="ltr"><pre class="western">&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;ar&quot; &gt;
-&lt;head&gt;
-  &lt;meta charset=&quot;UTF-8&quot; /&gt;
-  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
-  &lt;title&gt;<span lang="hi-IN">بث صوتي مباشر قوي وثابت</span>&lt;/title&gt;
-  &lt;style&gt;
-    body {
-      font-family: &quot;Segoe UI&quot;, Tahoma, Geneva, Verdana, sans-serif;
-      background: #0f2027;
-      background: linear-gradient(to right, #203a43, #2c5364);
-      color: #fff;
-      text-align: center;
-      padding: 40px 20px;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    h1 {
-      margin-bottom: 40px;
-      font-weight: 700;
-      font-size: 2.5em;
-    }
-    button {
-      background-color: #1db954;
-      border: none;
-      color: white;
-      padding: 16px 40px;
-      font-size: 1.2em;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 0 12px;
-      transition: background-color 0.3s ease;
-      box-shadow: 0 4px 10px rgba(29, 185, 84, 0.5);
-      user-select: none;
-    }
-    button:disabled {
-      background-color: #555;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    button:hover:not(:disabled) {
-      background-color: #1ed760;
-    }
-    #status {
+  <meta charset="UTF-8" />
+  <title>بث صوت مباشر مع قياس الصوت</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #volumeMeter {
+      width: 300px;
+      height: 30px;
+      background: #ddd;
       margin-top: 20px;
-      font-size: 1em;
-      color: #bbb;
-      min-height: 24px;
+      border-radius: 5px;
+      overflow: hidden;
     }
-    audio {
-      margin-top: 30px;
-      width: 90%;
-      max-width: 600px;
-      border-radius: 10px;
-      outline: none;
-      background: #222;
-      box-shadow: 0 0 15px rgba(29, 185, 84, 0.5);
+    #volumeLevel {
+      height: 100%;
+      background: #4caf50;
+      width: 0%;
+      transition: width 0.1s ease-out;
     }
-  &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-  &lt;h1&gt;<span lang="hi-IN">بث صوتي مباشر ثابت وقوي</span>&lt;/h1&gt;
-  &lt;div&gt;
-    &lt;button id=&quot;startBtn&quot;&gt;<span lang="hi-IN">ابدأ البث</span>&lt;/button&gt;
-    &lt;button id=&quot;stopBtn&quot; disabled&gt;<span lang="hi-IN">أوقف البث</span>&lt;/button&gt;
-  &lt;/div&gt;
-  &lt;div id=&quot;status&quot;&gt;<span lang="hi-IN">الحالة</span>: <span lang="hi-IN">متوقف</span>&lt;/div&gt;
-  &lt;audio id=&quot;audio&quot; controls autoplay&gt;&lt;/audio&gt;
+    button { padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>بث صوت مباشر مع قياس الصوت</h1>
+  <button id="startBtn">ابدأ التسجيل</button>
+  <button id="stopBtn" disabled>أوقف التسجيل</button>
 
-  &lt;script&gt;
-    (function() {
-      const startBtn = document.getElementById('startBtn');
-      const stopBtn = document.getElementById('stopBtn');
-      const audioElem = document.getElementById('audio');
-      const statusElem = document.getElementById('status');
+  <div id="volumeMeter">
+    <div id="volumeLevel"></div>
+  </div>
 
-      let audioContext = null;
-      let mediaStream = null;
-      let sourceNode = null;
+  <script>
+    let audioContext;
+    let analyser;
+    let microphone;
+    let javascriptNode;
+    let stream;
 
-      function updateStatus(message, isError = false) {
-        statusElem.textContent = '<span lang="hi-IN">الحالة</span>: ' + message;
-        statusElem.style.color = isError ? '#ff5555' : '#bbb';
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const volumeLevel = document.getElementById('volumeLevel');
+
+    startBtn.onclick = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        microphone = audioContext.createMediaStreamSource(stream);
+        javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+        analyser.smoothingTimeConstant = 0.8;
+        analyser.fftSize = 1024;
+
+        microphone.connect(analyser);
+        analyser.connect(javascriptNode);
+        javascriptNode.connect(audioContext.destination);
+
+        javascriptNode.onaudioprocess = () => {
+          let array = new Uint8Array(analyser.frequencyBinCount);
+          analyser.getByteFrequencyData(array);
+          let values = 0;
+
+          for (let i = 0; i < array.length; i++) {
+            values += array[i];
+          }
+
+          let average = values / array.length;
+          let volumePercent = Math.min(100, (average / 255) * 100);
+          volumeLevel.style.width = volumePercent + '%';
+        };
+
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        alert('تم السماح بالوصول للمايكروفون');
+
+      } catch (err) {
+        alert('رفض الوصول إلى المايكروفون');
       }
+    };
 
-      async function startStreaming() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          updateStatus('<span lang="hi-IN">المتصفح لا يدعم الوصول للمايكروفون</span>.', true);
-          alert('<span lang="hi-IN">متصفحك لا يدعم ميزة استخدام المايكروفون</span>.');
-          return;
-        }
-
-        try {
-          updateStatus('<span lang="hi-IN">يتم طلب إذن المايكروفون</span>...');
-          mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-          sourceNode = audioContext.createMediaStreamSource(mediaStream);
-
-          // <span lang="hi-IN">يمكنك إضافة معالجة صوتية هنا مثل فلتر أو تحسين صوتي</span>
-
-          sourceNode.connect(audioContext.destination);
-          audioElem.srcObject = mediaStream;
-
-          startBtn.disabled = true;
-          stopBtn.disabled = false;
-
-          updateStatus('<span lang="hi-IN">البث شغال الآن</span>');
-        } catch (error) {
-          updateStatus('<span lang="hi-IN">خطأ في الوصول للمايكروفون</span>: ' + error.message, true);
-          alert('<span lang="hi-IN">تعذر الوصول إلى المايكروفون</span>: ' + error.message);
-        }
+    stopBtn.onclick = () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
-
-      function stopStreaming() {
-        if (mediaStream) {
-          mediaStream.getTracks().forEach(track =&gt; track.stop());
-          mediaStream = null;
-        }
-        if (sourceNode) {
-          sourceNode.disconnect();
-          sourceNode = null;
-        }
-        if (audioContext) {
-          audioContext.close();
-          audioContext = null;
-        }
-
-        audioElem.srcObject = null;
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-        updateStatus('<span lang="hi-IN">متوقف</span>');
+      if (javascriptNode) {
+        javascriptNode.disconnect();
       }
-
-      startBtn.addEventListener('click', () =&gt; {
-        startStreaming();
-      });
-
-      stopBtn.addEventListener('click', () =&gt; {
-        stopStreaming();
-      });
-
-      // <span lang="hi-IN">لتحسين التوافق مع </span>iOS Safari:  
-      document.body.addEventListener('touchstart', () =&gt; {
-        if (audioContext &amp;&amp; audioContext.state === 'suspended') {
-          audioContext.resume();
-        }
-      }, { once: true });
-    })();
-  &lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;</pre>
+      if (microphone) {
+        microphone.disconnect();
+      }
+      if (analyser) {
+        analyser.disconnect();
+      }
+      if (audioContext) {
+        audioContext.close();
+      }
+      volumeLevel.style.width = '0%';
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      alert('تم إيقاف التسجيل');
+    };
+  </script>
 </body>
 </html>
