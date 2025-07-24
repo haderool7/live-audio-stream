@@ -1,4 +1,32 @@
 <!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>بث صوت مباشر</title>
+</head>
+<body>
+  <h1>بث صوت مباشر</h1>
+  <p>اضغط الزر للسماح بالوصول إلى المايكروفون.</p>
+  <button id="startBtn">ابدأ التسجيل</button>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        alert('تم السماح بالوصول للمايكروفون');
+        // هنا تقدر تضيف كود البث أو التسجيل حسب حاجتك
+        console.log('Stream:', stream);
+      } catch (error) {
+        alert('رفض الوصول إلى المايكروفون');
+      }
+    });
+  </script>
+</body>
+</html>
+
+<!DOCTYPE html>
 <html>
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
