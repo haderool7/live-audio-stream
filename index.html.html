@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 25.2.3.2 (Linux)"/>
+	<meta name="created" content="00:00:00"/>
+	<meta name="changed" content="00:00:00"/>
+	<style type="text/css">
+		@page { size: 8.5in 11in; margin: 0.79in }
+		p { margin-bottom: 0.1in; line-height: 115%; background: transparent }
+		pre { background: transparent }
+		pre.western { font-family: "Liberation Mono", monospace; font-size: 10pt }
+		pre.cjk { font-family: "Noto Sans Mono CJK SC", monospace; font-size: 10pt }
+		pre.ctl { font-family: "Liberation Mono", monospace; font-size: 10pt }
+	</style>
+</head>
+<body lang="en-US" link="#000080" vlink="#800000" dir="ltr"><pre class="western">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ar&quot; &gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
+  &lt;title&gt;<span lang="hi-IN">تجربة متقدمة جداً لتشغيل وتسجيل الكاميرا والمايكروفون</span>&lt;/title&gt;
+  &lt;style&gt;
+    body {
+      font-family: &quot;Segoe UI&quot;, Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #eee;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    video {
+      margin-top: 20px;
+      border: 3px solid #4caf50;
+      border-radius: 10px;
+      width: 720px;
+      height: 540px;
+      background: black;
+      box-shadow: 0 0 15px #4caf50;
+    }
+    #controls {
+      margin-top: 20px;
+    }
+    button {
+      background-color: #4caf50;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 8px;
+      color: white;
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.6);
+      transition: background-color 0.3s ease;
+    }
+    button:hover:not(:disabled) {
+      background-color: #43a047;
+    }
+    button:disabled {
+      background-color: #2e7d32;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    #audioLevel {
+      width: 720px;
+      height: 30px;
+      background-color: #222;
+      margin: 20px auto 0 auto;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: inset 0 0 5px #4caf50;
+    }
+    #audioLevelFill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #76ff03, #c6ff00);
+      transition: width 0.1s ease;
+    }
+    #downloadLink {
+      display: inline-block;
+      margin-top: 20px;
+      font-size: 18px;
+      color: #76ff03;
+      text-decoration: none;
+      border: 2px solid #76ff03;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #76ff03;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    #downloadLink:hover {
+      background-color: #76ff03;
+      color: #121212;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+  &lt;h1&gt;<span lang="hi-IN">تجربة متقدمة جداً لتشغيل وتسجيل الكاميرا والمايكروفون</span>&lt;/h1&gt;
+
+  &lt;video id=&quot;video&quot; autoplay playsinline muted&gt;&lt;/video&gt;
+
+  &lt;div id=&quot;audioLevel&quot; title=&quot;<span lang="hi-IN">مستوى الصوت</span>&quot;&gt;
+    &lt;div id=&quot;audioLevelFill&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div id=&quot;controls&quot;&gt;
+    &lt;button id=&quot;startBtn&quot;&gt;<span lang="hi-IN">شغّل الكاميرا والمايكروفون</span>&lt;/button&gt;
+    &lt;button id=&quot;recordBtn&quot; disabled&gt;<span lang="hi-IN">بدء التسجيل</span>&lt;/button&gt;
+    &lt;button id=&quot;stopBtn&quot; disabled&gt;<span lang="hi-IN">إيقاف التسجيل</span>&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div id=&quot;status&quot;&gt;&lt;/div&gt;
+
+  &lt;a id=&quot;downloadLink&quot; style=&quot;display:none&quot; href=&quot;#&quot; download=&quot;recording.webm&quot;&gt;<span lang="hi-IN">تحميل التسجيل</span>&lt;/a&gt;
+
+  &lt;script&gt;
+    const startBtn = document.getElementById('startBtn');
+    const recordBtn = document.getElementById('recordBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const video = document.getElementById('video');
+    const status = document.getElementById('status');
+    const audioLevelFill = document.getElementById('audioLevelFill');
+    const downloadLink = document.getElementById('downloadLink');
+
+    let mediaStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
+    let dataArray = null;
+
+    function updateAudioLevel() {
+      if (!analyser) return;
+      analyser.getByteFrequencyData(dataArray);
+      let values = 0;
+      for (let i = 0; i &lt; dataArray.length; i++) {
+        values += dataArray[i];
+      }
+      let average = values / dataArray.length;
+      let percent = Math.min(100, (average / 128) * 100);
+      audioLevelFill.style.width = percent + '%';
+      requestAnimationFrame(updateAudioLevel);
+    }
+
+    startBtn.addEventListener('click', async () =&gt; {
+      status.style.color = '#eee';
+      status.textContent = '<span lang="hi-IN">جاري طلب الأذونات</span>...';
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 1280, height: 720, frameRate: { ideal: 30, max: 60 } },
+          audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 }
+        });
+
+        video.srcObject = mediaStream;
+        status.textContent = '<span lang="hi-IN">تم تفعيل الكاميرا والمايكروفون بنجاح</span>.';
+
+        recordBtn.disabled = false;
+        startBtn.disabled = true;
+
+        // <span lang="hi-IN">إعداد تحليل الصوت</span>
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        microphone = audioContext.createMediaStreamSource(mediaStream);
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+        microphone.connect(analyser);
+
+        updateAudioLevel();
+
+      } catch (error) {
+        status.style.color = 'red';
+        status.textContent = `<span lang="hi-IN">حدث خطأ أو تم رفض الأذونات</span>: ${error.message}`;
+      }
+    });
+
+    recordBtn.addEventListener('click', () =&gt; {
+      if (!mediaStream) return;
+
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm; codecs=vp9,opus' });
+
+      mediaRecorder.ondataavailable = event =&gt; {
+        if (event.data.size &gt; 0) {
+          recordedChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstart = () =&gt; {
+        status.style.color = '#76ff03';
+        status.textContent = '<span lang="hi-IN">تم بدء التسجيل</span>...';
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+        downloadLink.style.display = 'none';
+      };
+
+      mediaRecorder.onstop = () =&gt; {
+        status.style.color = '#eee';
+        status.textContent = '<span lang="hi-IN">تم إيقاف التسجيل</span>. <span lang="hi-IN">يمكنك الآن تحميل الملف</span>.';
+        recordBtn.disabled = false;
+        stopBtn.disabled = true;
+
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        downloadLink.href = url;
+        downloadLink.style.display = 'inline-block';
+      };
+
+      mediaRecorder.start();
+    });
+
+    stopBtn.addEventListener('click', () =&gt; {
+      if (mediaRecorder &amp;&amp; mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+    });
+
+  &lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+</body>
+</html>
