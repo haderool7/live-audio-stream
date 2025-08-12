@@ -1,107 +1,427 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>بث صوت مباشر مع قياس الصوت</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    #volumeMeter {
-      width: 300px;
-      height: 30px;
-      background: #ddd;
-      margin-top: 20px;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-    #volumeLevel {
-      height: 100%;
-      background: #4caf50;
-      width: 0%;
-      transition: width 0.1s ease-out;
-    }
-    button { padding: 10px 20px; font-size: 16px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مطعم 360</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        .menu-item:hover .menu-img {
+            transform: scale(1.05);
+        }
+        
+        .menu-img {
+            transition: transform 0.3s ease;
+        }
+        
+        .chat-message {
+            max-width: 80%;
+        }
+        
+        .order-tracker {
+            position: relative;
+        }
+        
+        .order-tracker::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 100%;
+            background-color: #e5e7eb;
+            z-index: 0;
+        }
+        
+        .tracker-step {
+            position: relative;
+            z-index: 1;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+    </style>
 </head>
-<body>
-  <h1>بث صوت مباشر مع قياس الصوت</h1>
-  <button id="startBtn">ابدأ التسجيل</button>
-  <button id="stopBtn" disabled>أوقف التسجيل</button>
+<body class="bg-gray-50 text-gray-800">
+    <!-- Header -->
+    <header class="bg-red-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                    <span class="text-red-600 font-bold text-xl">360</span>
+                </div>
+                <h1 class="text-xl font-bold">مطعم 360</h1>
+            </div>
+            
+            <div class="flex items-center space-x-4 space-x-reverse">
+                <button id="notificationsBtn" class="relative">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span class="absolute -top-1 -right-1 bg-yellow-400 text-xs w-5 h-5 flex items-center justify-center rounded-full">3</span>
+                </button>
+                <button id="cartBtn" class="relative">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span class="absolute -top-1 -right-1 bg-yellow-400 text-xs w-5 h-5 flex items-center justify-center rounded-full">2</span>
+                </button>
+                <button id="menuBtn" class="md:hidden">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav id="mainNav" class="hidden md:block bg-red-700">
+            <div class="container mx-auto px-4">
+                <ul class="flex space-x-8 space-x-reverse">
+                    <li><a href="#" class="block py-3 px-2 text-white font-medium hover:bg-red-800 transition">الرئيسية</a></li>
+                    <li><a href="#" class="block py-3 px-2 text-white font-medium hover:bg-red-800 transition">قائمة الطعام</a></li>
+                    <li><a href="#" class="block py-3 px-2 text-white font-medium hover:bg-red-800 transition">حجز طاولة</a></li>
+                    <li><a href="#" class="block py-3 px-2 text-white font-medium hover:bg-red-800 transition">طلباتي</a></li>
+                    <li><a href="#" class="block py-3 px-2 text-white font-medium hover:bg-red-800 transition">نقاط الولاء</a></li>
+                    <li><a href="#" class="block py-3 px-2 text-white font-medium hover:bg-red-800 transition">الدعم الفني</a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden absolute top-full left-0 right-0 bg-white shadow-lg z-50">
+            <ul class="py-2">
+                <li><a href="#" class="block py-3 px-4 text-gray-800 hover:bg-gray-100 font-medium">الرئيسية</a></li>
+                <li><a href="#" class="block py-3 px-4 text-gray-800 hover:bg-gray-100 font-medium">قائمة الطعام</a></li>
+                <li><a href="#" class="block py-3 px-4 text-gray-800 hover:bg-gray-100 font-medium">حجز طاولة</a></li>
+                <li><a href="#" class="block py-3 px-4 text-gray-800 hover:bg-gray-100 font-medium">طلباتي</a></li>
+                <li><a href="#" class="block py-3 px-4 text-gray-800 hover:bg-gray-100 font-medium">نقاط الولاء</a></li>
+                <li><a href="#" class="block py-3 px-4 text-gray-800 hover:bg-gray-100 font-medium">الدعم الفني</a></li>
+                <li class="border-t border-gray-200 mt-2 pt-2">
+                    <a href="#" class="block py-3 px-4 text-red-600 font-medium">تسجيل الدخول</a>
+                </li>
+            </ul>
+        </div>
+    </header>
 
-  <div id="volumeMeter">
-    <div id="volumeLevel"></div>
-  </div>
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Hero Section -->
+        <section class="bg-gradient-to-r from-red-600 to-red-500 rounded-xl shadow-lg overflow-hidden mb-8">
+            <div class="flex flex-col md:flex-row">
+                <div class="md:w-1/2 p-8 text-white flex flex-col justify-center">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">أهلاً بك في مطعم 360</h2>
+                    <p class="text-lg mb-6">تجربة طعام استثنائية مع أفضل المأكولات وأجواء لا تُنسى</p>
+                    <div class="flex space-x-4 space-x-reverse">
+                        <button class="bg-white text-red-600 px-6 py-2 rounded-full font-medium hover:bg-gray-100 transition">اطلب الآن</button>
+                        <button class="border-2 border-white text-white px-6 py-2 rounded-full font-medium hover:bg-white hover:text-red-600 transition">احجز طاولة</button>
+                    </div>
+                </div>
+                <div class="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="مطعم 360" class="w-full h-full object-cover">
+                </div>
+            </div>
+        </section>
 
-  <script>
-    let audioContext;
-    let analyser;
-    let microphone;
-    let javascriptNode;
-    let stream;
+        <!-- Food Categories -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold mb-6 border-r-4 border-red-600 pr-3">تصنيفات الطعام</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <button class="category-btn bg-white rounded-lg shadow p-4 text-center hover:bg-red-50 transition" data-category="all">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-utensils text-red-600"></i>
+                    </div>
+                    <span class="font-medium">الكل</span>
+                </button>
+                <button class="category-btn bg-white rounded-lg shadow p-4 text-center hover:bg-red-50 transition" data-category="main">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-drumstick-bite text-red-600"></i>
+                    </div>
+                    <span class="font-medium">الأطباق الرئيسية</span>
+                </button>
+                <button class="category-btn bg-white rounded-lg shadow p-4 text-center hover:bg-red-50 transition" data-category="appetizers">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-leaf text-red-600"></i>
+                    </div>
+                    <span class="font-medium">المقبلات</span>
+                </button>
+                <button class="category-btn bg-white rounded-lg shadow p-4 text-center hover:bg-red-50 transition" data-category="drinks">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-glass-whiskey text-red-600"></i>
+                    </div>
+                    <span class="font-medium">المشروبات</span>
+                </button>
+                <button class="category-btn bg-white rounded-lg shadow p-4 text-center hover:bg-red-50 transition" data-category="desserts">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-ice-cream text-red-600"></i>
+                    </div>
+                    <span class="font-medium">الحلويات</span>
+                </button>
+            </div>
+        </section>
 
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const volumeLevel = document.getElementById('volumeLevel');
+        <!-- Menu Items -->
+        <section class="mb-10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold border-r-4 border-red-600 pr-3">قائمة الطعام</h2>
+                <div class="relative">
+                    <select class="appearance-none bg-white border border-gray-300 rounded-full pl-8 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <option>ترتيب حسب: الأكثر مبيعاً</option>
+                        <option>ترتيب حسب: السعر من الأقل للأعلى</option>
+                        <option>ترتيب حسب: السعر من الأعلى للأقل</option>
+                        <option>ترتيب حسب: الأحدث</option>
+                    </select>
+                    <i class="fas fa-sort absolute right-3 top-3 text-gray-500"></i>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="menuItems">
+                <!-- Menu Item 1 -->
+                <div class="menu-item bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition" data-category="main">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a8e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80" alt="طبق رئيسي" class="w-full h-48 object-cover menu-img">
+                        <div class="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">الأكثر مبيعاً</div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">ستيك لحم مشوي</h3>
+                            <span class="text-red-600 font-bold">45 ر.س</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">ستيك لحم مشوي مع صلصة خاصة وخضار مشوية وأرز بسمتي</p>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                                <span class="text-gray-600 text-sm mr-1">(48)</span>
+                            </div>
+                            <button class="add-to-cart bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition">
+                                <i class="fas fa-plus mr-1"></i> إضافة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu Item 2 -->
+                <div class="menu-item bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition" data-category="appetizers">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="سلطة" class="w-full h-48 object-cover menu-img">
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">سلطة سيزر</h3>
+                            <span class="text-red-600 font-bold">22 ر.س</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">سلطة طازجة مع خس رومين، كروتون، جبن بارميزان وصلصة سيزر</p>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <span class="text-gray-600 text-sm mr-1">(36)</span>
+                            </div>
+                            <button class="add-to-cart bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition">
+                                <i class="fas fa-plus mr-1"></i> إضافة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu Item 3 -->
+                <div class="menu-item bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition" data-category="drinks">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1551024506-0bccd828d307?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1557&q=80" alt="مشروب" class="w-full h-48 object-cover menu-img">
+                        <div class="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">صحي</div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">عصير أخضر</h3>
+                            <span class="text-red-600 font-bold">18 ر.س</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">عصير أخضر منعش من السبانخ، التفاح الأخضر، الخيار والليمون</p>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <span class="text-gray-600 text-sm mr-1">(52)</span>
+                            </div>
+                            <button class="add-to-cart bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition">
+                                <i class="fas fa-plus mr-1"></i> إضافة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu Item 4 -->
+                <div class="menu-item bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition" data-category="desserts">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1563805042-7684c019e1cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1527&q=80" alt="حلويات" class="w-full h-48 object-cover menu-img">
+                        <div class="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">جديد</div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">تشيز كيك</h3>
+                            <span class="text-red-600 font-bold">25 ر.س</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">تشيز كيك كلاسيكي مع طبقة من التوت الطازج</p>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <span class="text-gray-600 text-sm mr-1">(64)</span>
+                            </div>
+                            <button class="add-to-cart bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition">
+                                <i class="fas fa-plus mr-1"></i> إضافة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu Item 5 -->
+                <div class="menu-item bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition" data-category="main">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1681&q=80" alt="بيتزا" class="w-full h-48 object-cover menu-img">
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">بيتزا بيبروني</h3>
+                            <span class="text-red-600 font-bold">38 ر.س</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">بيتزا مع صلصة الطماطم، جبنة موزاريلا وبيبروني</p>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                                <span class="text-gray-600 text-sm mr-1">(42)</span>
+                            </div>
+                            <button class="add-to-cart bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition">
+                                <i class="fas fa-plus mr-1"></i> إضافة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu Item 6 -->
+                <div class="menu-item bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition" data-category="appetizers">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="مقبلات" class="w-full h-48 object-cover menu-img">
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg">سبرنغ رول</h3>
+                            <span class="text-red-600 font-bold">20 ر.س</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">سبرنغ رول مقرمش مع حشوة الدجاج والخضار</p>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                                <span class="text-gray-600 text-sm mr-1">(28)</span>
+                            </div>
+                            <button class="add-to-cart bg-red-600 text-white px-3 py-1 rounded-full text-sm hover:bg-red-700 transition">
+                                <i class="fas fa-plus mr-1"></i> إضافة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <button class="bg-white border border-red-600 text-red-600 px-6 py-2 rounded-full font-medium hover:bg-red-50 transition">عرض المزيد</button>
+            </div>
+        </section>
 
-    startBtn.onclick = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioContext.createAnalyser();
-        microphone = audioContext.createMediaStreamSource(stream);
-        javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+        <!-- Special Offers -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold mb-6 border-r-4 border-red-600 pr-3">العروض الخاصة</h2>
+            
+            <div class="bg-gradient-to-r from-red-700 to-red-600 rounded-xl shadow-lg overflow-hidden">
+                <div class="flex flex-col md:flex-row">
+                    <div class="md:w-1/2 p-8 text-white">
+                        <div class="bg-white text-red-600 inline-block px-3 py-1 rounded-full text-xs font-bold mb-4">عرض محدود</div>
+                        <h3 class="text-2xl font-bold mb-2">وجبة عائلية</h3>
+                        <p class="mb-4">احصل على خصم 25% عند طلب وجبتين رئيسيتين أو أكثر</p>
+                        <ul class="mb-6 space-y-2">
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span>خصم 25% على الوجبات الرئيسية</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span>مشروب مجاني لكل شخص</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <span>حلوى مجانية عند الطلب فوق 100 ر.س</span>
+                            </li>
+                        </ul>
+                        <div class="flex items-center mb-4">
+                            <span class="text-3xl font-bold">75 ر.س</span>
+                            <span class="line-through text-red-200 mr-2">100 ر.س</span>
+                        </div>
+                        <button class="bg-white text-red-600 px-6 py-2 rounded-full font-medium hover:bg-gray-100 transition">استخدم العرض</button>
+                    </div>
+                    <div class="md:w-1/2">
+                        <img src="https://images.unsplash.com/photo-1606787366850-de6330128bfc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="عرض عائلي" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        analyser.smoothingTimeConstant = 0.8;
-        analyser.fftSize = 1024;
-
-        microphone.connect(analyser);
-        analyser.connect(javascriptNode);
-        javascriptNode.connect(audioContext.destination);
-
-        javascriptNode.onaudioprocess = () => {
-          let array = new Uint8Array(analyser.frequencyBinCount);
-          analyser.getByteFrequencyData(array);
-          let values = 0;
-
-          for (let i = 0; i < array.length; i++) {
-            values += array[i];
-          }
-
-          let average = values / array.length;
-          let volumePercent = Math.min(100, (average / 255) * 100);
-          volumeLevel.style.width = volumePercent + '%';
-        };
-
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-
-        alert('تم السماح بالوصول للمايكروفون');
-
-      } catch (err) {
-        alert('رفض الوصول إلى المايكروفون');
-      }
-    };
-
-    stopBtn.onclick = () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      if (javascriptNode) {
-        javascriptNode.disconnect();
-      }
-      if (microphone) {
-        microphone.disconnect();
-      }
-      if (analyser) {
-        analyser.disconnect();
-      }
-      if (audioContext) {
-        audioContext.close();
-      }
-      volumeLevel.style.width = '0%';
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      alert('تم إيقاف التسجيل');
-    };
-  </script>
+        <!-- Loyalty Program -->
+        <section class="mb-10 bg-white rounded-xl shadow-md p-6">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-6 md:mb-0">
+                    <img src="https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1406&q=80" alt="نقاط الولاء" class="w-full rounded-lg">
+                </div>
+                <div class="md:w-1/2 md:pr-8">
+                    <h2 class="text-2xl font-bold mb-4 border-r-4 border-red-600 pr-3">برنامج الولاء</h2>
+                    <p class="text-gray-600 mb-6">احصل على نقاط مع كل طلب وقم بتبديلها بخصومات وهدايا حصرية!</p>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium">نقاطك الحالية</span>
+                            <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm">120 نقطة</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-red-600 h-2.5 rounded-full" style="width: 40%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">80 نقطة متبقية للوصول إلى المستوى الذهبي</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gray-50 rounded-lg p-3 text-center">
+                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <i class="fas fa-coins text-red-600"></i>
+                            </div>
+                            <span class="text-sm font-medium">5 نقاط لكل 10 ر.س</span>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3 text-center">
+                            <div class="
 </body>
 </html>
