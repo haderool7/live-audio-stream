@@ -1,8 +1,13 @@
-// main.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:http/http.dart' as http;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = 'pk_test_YOUR_PUBLISHABLE_KEY'; // غيرها بمفتاحك
+  await Stripe.instance.applySettings();
   runApp(RestaurantApp());
 }
 
@@ -20,7 +25,6 @@ class RestaurantApp extends StatelessWidget {
   }
 }
 
-// نموذج بيانات طبق الطعام
 class MenuItem {
   final String name;
   final String image;
@@ -29,20 +33,18 @@ class MenuItem {
   MenuItem({required this.name, required this.image, required this.price});
 }
 
-// بيانات افتراضية لقائمة الطعام
 final List<MenuItem> menuItems = [
   MenuItem(name: 'شاورما دجاج', image: 'https://i.imgur.com/1Y6jI0k.jpg', price: 5000),
   MenuItem(name: 'مندي لحم', image: 'https://i.imgur.com/7fH0lZb.jpg', price: 15000),
   MenuItem(name: 'سمك مشوي', image: 'https://i.imgur.com/0xDfSyr.jpg', price: 12000),
 ];
 
-// الصفحة الرئيسية مع التنقل بين الصفحات
+enum Pages { Menu, Booking, Chat, Tracking, Payment }
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
-
-enum Pages { Menu, Booking, Chat, Tracking }
 
 class _HomePageState extends State<HomePage> {
   Pages selectedPage = Pages.Menu;
@@ -50,13 +52,10 @@ class _HomePageState extends State<HomePage> {
   DateTime? bookingDate;
   TimeOfDay? bookingTime;
   int guests = 1;
-
-  // لتتبع الطلب - موقع ثابت افتراضي
   LatLng orderLocation = LatLng(33.312805, 44.361488);
-
-  // محادثة دردشة بسيطة
   List<String> messages = ['مرحبا! كيف أساعدك اليوم؟'];
   TextEditingController chatController = TextEditingController();
+  bool _loadingPayment = false;
 
   void addToCart(MenuItem item) {
     setState(() {
@@ -92,10 +91,57 @@ class _HomePageState extends State<HomePage> {
     if (chatController.text.trim().isEmpty) return;
     setState(() {
       messages.add(chatController.text.trim());
-      // رد ذكي وهمي (للتوضيح فقط)
       messages.add('شكراً لسؤالك! جاري المعالجة...');
       chatController.clear();
     });
+  }
+
+  Future<Map<String, dynamic>> createPaymentIntent(int amount) async {
+    final url = Uri.parse('http://YOUR_SERVER_IP:4242/create-payment-intent');
+    final response = await http.post(url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'amount': amount}));
+    return jsonDecode(response.body);
+  }
+
+  Future<void> pay() async {
+    setState(() => _loadingPayment = true);
+    try {
+      final total = cart.fold(0, (sum, item) => sum + item.price).toInt();
+      if (total == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('السلة فارغة!')),
+        );
+        setState(() => _loadingPayment = false);
+        return;
+      }
+
+      final paymentData = await createPaymentIntent(total * 100); // السعر بالسنتات
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentData['clientSecret'],
+          merchantDisplayName: 'مطعم 360',
+          merchantCountryCode: 'IQ',
+        ),
+      );
+
+      await Stripe.instance.presentPaymentSheet();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم الدفع بنجاح!')),
+      );
+
+      setState(() {
+        cart.clear();
+        selectedPage = Pages.Menu;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل الدفع: $e')),
+      );
+    }
+    setState(() => _loadingPayment = false);
   }
 
   @override
@@ -115,6 +161,9 @@ class _HomePageState extends State<HomePage> {
       case Pages.Tracking:
         body = trackingPage();
         break;
+      case Pages.Payment:
+        body = paymentPage();
+        break;
     }
 
     return Scaffold(
@@ -124,7 +173,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: body,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedPage.index,
+        currentIndex: selectedPage.index > 4 ? 0 : selectedPage.index,
         selectedItemColor: Colors.red,
         unselectedItemColor: Colors.grey,
         onTap: (index) {
@@ -137,6 +186,7 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.event_seat), label: 'الحجز'),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'الدردشة'),
           BottomNavigationBarItem(icon: Icon(Icons.location_on), label: 'التتبع'),
+          BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'الدفع'),
         ],
       ),
       floatingActionButton: selectedPage == Pages.Menu && cart.isNotEmpty
@@ -163,7 +213,7 @@ class _HomePageState extends State<HomePage> {
           child: ListTile(
             leading: Image.network(item.image, width: 70, fit: BoxFit.cover),
             title: Text(item.name),
-            subtitle: Text('${item.price} د.ع'),
+            subtitle: Text('${item.price.toInt()} د.ع'),
             trailing: IconButton(
               icon: Icon(Icons.add_shopping_cart, color: Colors.red),
               onPressed: () => addToCart(item),
@@ -189,7 +239,7 @@ class _HomePageState extends State<HomePage> {
                 final item = cart[index];
                 return ListTile(
                   title: Text(item.name),
-                  trailing: Text('${item.price} د.ع'),
+                  trailing: Text('${item.price.toInt()} د.ع'),
                   leading: IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
                     onPressed: () => removeFromCart(item),
@@ -198,17 +248,17 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          Text('الإجمالي: $total د.ع', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text('الإجمالي: ${total.toInt()} د.ع', style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: 10),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم إرسال الطلب (تجريبي)')));
               setState(() {
-                cart.clear();
+                selectedPage = Pages.Payment;
               });
+              Navigator.pop(context);
             },
-            child: Text('تأكيد الطلب'),
+            child: Text('الدفع'),
           ),
         ],
       ),
@@ -277,7 +327,7 @@ class _HomePageState extends State<HomePage> {
             itemCount: messages.length,
             itemBuilder: (context, index) {
               final msg = messages[index];
-              bool isUser = index % 2 == 0; // التناوب (للتوضيح)
+              bool isUser = index % 2 == 0;
               return Container(
                 alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -325,6 +375,18 @@ class _HomePageState extends State<HomePage> {
       markers: {
         Marker(markerId: MarkerId('order'), position: orderLocation),
       },
+    );
+  }
+
+  Widget paymentPage() {
+    return Center(
+      child: _loadingPayment
+          ? CircularProgressIndicator()
+          : ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: pay,
+              child: Text('ادفع مبلغ الطلب'),
+            ),
     );
   }
 }
